@@ -1,0 +1,19 @@
+
+Š
+java:S2184+"BCast one of the operands of this addition operation to a "double".(â©Âÿÿÿÿÿ8›‹¨Ñ‡2J$5526ca44-ff62-453a-ba75-d4f25fb373c1
+Š
+java:S2184_"HCast one of the operands of this multiplication operation to a "double".(–şâ]8›‹¨Ñ‡2J$8c2231c7-84fc-47e1-b1fe-46c1d917d164
+‹
+java:S2184`"HCast one of the operands of this multiplication operation to a "double".(‡Ê«°8›‹¨Ñ‡2J$b3d54601-37db-476a-8dd0-d8e8a343ef6e
+š
+java:S1450"WRemove the "tilePane" field and declare it as a local variable in the relevant methods.(¬ÎÄç8‹¨Ñ‡2J$3fa49944-ae2d-45c2-a775-591555e05fea
+~	java:S125"<This block of commented-out lines of code should be removed.(¡üğÃ8Ÿ‹¨Ñ‡2J$61107cd1-55fa-4a44-946a-3131d432e054
+
+java:S1117:"<Rename "timeline" which hides the field declared at line 25.(ÎÿÅ÷8¥‹¨Ñ‡2J$1f5ff44b-5835-4826-9c78-6fcdc88844c6
+ƒ	java:S1259"<This block of commented-out lines of code should be removed.(ÏÒ­—øÿÿÿÿ8¥‹¨Ñ‡2J$45fa8961-3735-4ff1-853c-ce6c1e136b63
+t
+java:S1602<",Remove useless curly braces around statement(äÒ´Åúÿÿÿÿ8¥‹¨Ñ‡2J$0afe8308-d9b0-42be-9a7c-413fc95b25c1
+`
+java:S2119K"Save and re-use this "Random".(¼İÅf8§‹¨Ñ‡2J$2a7def13-479d-49b5-9183-e8a34be549bf
+m	java:S106c"+Replace this use of System.out by a logger.(ÛŒçø8©‹¨Ñ‡2J$f180b988-685a-4a22-987c-c1ec1ddabed2
+m	java:S106l"+Replace this use of System.out by a logger.(ãİ°8ŞÖ°Ñ‡2J$0f459aed-1ae6-4121-bfbf-193bf936b312
