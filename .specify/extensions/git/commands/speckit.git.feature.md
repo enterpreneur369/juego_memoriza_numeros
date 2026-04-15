@@ -1,5 +1,5 @@
 ---
-description: "Create a feature branch with sequential or timestamp numbering"
+description: "Create a feature branch using feature/fix/chore prefixes"
 ---
 
 # Create Feature Branch
@@ -19,20 +19,20 @@ You **MUST** consider the user input before proceeding (if not empty).
 If the user explicitly provided `GIT_BRANCH_NAME` (e.g., via environment variable, argument, or in their request), pass it through to the script by setting the `GIT_BRANCH_NAME` environment variable before invoking the script. When `GIT_BRANCH_NAME` is set:
 - The script uses the exact value as the branch name, bypassing all prefix/suffix generation
 - `--short-name`, `--number`, and `--timestamp` flags are ignored
-- `FEATURE_NUM` is extracted from the name if it starts with a numeric prefix, otherwise set to the full branch name
+- `FEATURE_NUM` in output is a compatibility field and should not be used as numbering source
 
 ## Prerequisites
 
 - Verify Git is available by running `git rev-parse --is-inside-work-tree 2>/dev/null`
 - If Git is not available, warn the user and skip branch creation
 
-## Branch Numbering Mode
+## Branch Type Mode
 
-Determine the branch numbering strategy by checking configuration in this order:
+Determine branch type (`feature`, `fix`, or `chore`) from user intent:
 
-1. Check `.specify/extensions/git/git-config.yml` for `branch_numbering` value
-2. Check `.specify/init-options.json` for `branch_numbering` value (backward compatibility)
-3. Default to `sequential` if neither exists
+1. Default to `feature` for net new capabilities.
+2. Use `fix` when the request is a bug correction.
+3. Use `chore` for maintenance or tooling work.
 
 ## Execution
 
@@ -44,12 +44,10 @@ Generate a concise short name (2-4 words) for the branch:
 Run the appropriate script based on your platform:
 
 - **Bash**: `.specify/extensions/git/scripts/bash/create-new-feature.sh --json --short-name "<short-name>" "<feature description>"`
-- **Bash (timestamp)**: `.specify/extensions/git/scripts/bash/create-new-feature.sh --json --timestamp --short-name "<short-name>" "<feature description>"`
-- **PowerShell**: `.specify/extensions/git/scripts/powershell/create-new-feature.ps1 -Json -ShortName "<short-name>" "<feature description>"`
-- **PowerShell (timestamp)**: `.specify/extensions/git/scripts/powershell/create-new-feature.ps1 -Json -Timestamp -ShortName "<short-name>" "<feature description>"`
+- **PowerShell**: `.specify/extensions/git/scripts/powershell/create-new-feature.ps1 -Json -BranchType "<feature|fix|chore>" -ShortName "<short-name>" "<feature description>"`
 
 **IMPORTANT**:
-- Do NOT pass `--number` — the script determines the correct next number automatically
+- Prefer passing branch type explicitly in PowerShell with `-BranchType`
 - Always include the JSON flag (`--json` for Bash, `-Json` for PowerShell) so the output can be parsed reliably
 - You must only ever run this script once per feature
 - The JSON output will contain `BRANCH_NAME` and `FEATURE_NUM`
@@ -63,5 +61,5 @@ If Git is not installed or the current directory is not a Git repository:
 ## Output
 
 The script outputs JSON with:
-- `BRANCH_NAME`: The branch name (e.g., `003-user-auth` or `20260319-143022-user-auth`)
-- `FEATURE_NUM`: The numeric or timestamp prefix used
+- `BRANCH_NAME`: The branch name (e.g., `feature/user-auth`, `fix/timer-reset`)
+- `FEATURE_NUM`: Compatibility field (contains branch type or override-derived value)

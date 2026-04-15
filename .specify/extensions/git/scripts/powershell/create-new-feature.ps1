@@ -9,6 +9,8 @@ param(
     [switch]$AllowExistingBranch,
     [switch]$DryRun,
     [string]$ShortName,
+    [ValidateSet('feature', 'fix', 'chore')]
+    [string]$BranchType = 'feature',
     [Parameter()]
     [long]$Number = 0,
     [switch]$Timestamp,
@@ -19,15 +21,16 @@ param(
 $ErrorActionPreference = 'Stop'
 
 if ($Help) {
-    Write-Host "Usage: ./create-new-feature.ps1 [-Json] [-DryRun] [-AllowExistingBranch] [-ShortName <name>] [-Number N] [-Timestamp] <feature description>"
+    Write-Host "Usage: ./create-new-feature.ps1 [-Json] [-DryRun] [-AllowExistingBranch] [-ShortName <name>] [-BranchType <feature|fix|chore>] <feature description>"
     Write-Host ""
     Write-Host "Options:"
     Write-Host "  -Json               Output in JSON format"
     Write-Host "  -DryRun             Compute branch name without creating the branch"
     Write-Host "  -AllowExistingBranch  Switch to branch if it already exists instead of failing"
     Write-Host "  -ShortName <name>   Provide a custom short name (2-4 words) for the branch"
-    Write-Host "  -Number N           Specify branch number manually (overrides auto-detection)"
-    Write-Host "  -Timestamp          Use timestamp prefix (YYYYMMDD-HHMMSS) instead of sequential numbering"
+    Write-Host "  -BranchType <type>  Branch category: feature (default), fix, or chore"
+    Write-Host "  -Number N           Deprecated (ignored; kept for backwards compatibility)"
+    Write-Host "  -Timestamp          Deprecated (ignored; kept for backwards compatibility)"
     Write-Host "  -Help               Show this help message"
     Write-Host ""
     Write-Host "Environment variables:"
@@ -37,7 +40,7 @@ if ($Help) {
 }
 
 if (-not $FeatureDescription -or $FeatureDescription.Count -eq 0) {
-    Write-Error "Usage: ./create-new-feature.ps1 [-Json] [-DryRun] [-AllowExistingBranch] [-ShortName <name>] [-Number N] [-Timestamp] <feature description>"
+    Write-Error "Usage: ./create-new-feature.ps1 [-Json] [-DryRun] [-AllowExistingBranch] [-ShortName <name>] [-BranchType <feature|fix|chore>] <feature description>"
     exit 1
 }
 
@@ -91,7 +94,8 @@ function Get-HighestNumberFromBranches {
             }
             return Get-HighestNumberFromNames -Names $cleanNames
         }
-    } catch {
+    }
+    catch {
         Write-Verbose "Could not check Git branches: $_"
     }
     return 0
@@ -115,7 +119,8 @@ function Get-HighestNumberFromRemoteRefs {
                 }
             }
         }
-    } catch {
+    }
+    catch {
         Write-Verbose "Could not query remote refs: $_"
     }
     return $highest
@@ -131,10 +136,12 @@ function Get-NextBranchNumber {
         $highestBranch = Get-HighestNumberFromBranches
         $highestRemote = Get-HighestNumberFromRemoteRefs
         $highestBranch = [Math]::Max($highestBranch, $highestRemote)
-    } else {
+    }
+    else {
         try {
             git fetch --all --prune 2>$null | Out-Null
-        } catch { }
+        }
+        catch { }
         $highestBranch = Get-HighestNumberFromBranches
     }
 
@@ -199,9 +206,11 @@ if (-not $commonLoaded) {
 # Resolve repository root
 if (Get-Command Get-RepoRoot -ErrorAction SilentlyContinue) {
     $repoRoot = Get-RepoRoot
-} elseif ($projectRoot) {
+}
+elseif ($projectRoot) {
     $repoRoot = $projectRoot
-} else {
+}
+else {
     throw "Could not determine repository root."
 }
 
@@ -210,11 +219,13 @@ if (Get-Command Test-HasGit -ErrorAction SilentlyContinue) {
     # Call without parameters for compatibility with core common.ps1 (no -RepoRoot param)
     # and git-common.ps1 (has -RepoRoot param with default).
     $hasGit = Test-HasGit
-} else {
+}
+else {
     try {
         git -C $repoRoot rev-parse --is-inside-work-tree 2>$null | Out-Null
         $hasGit = ($LASTEXITCODE -eq 0)
-    } catch {
+    }
+    catch {
         $hasGit = $false
     }
 }
@@ -242,7 +253,8 @@ function Get-BranchName {
         if ($stopWords -contains $word) { continue }
         if ($word.Length -ge 3) {
             $meaningfulWords += $word
-        } elseif ($Description -match "\b$($word.ToUpper())\b") {
+        }
+        elseif ($Description -match "\b$($word.ToUpper())\b") {
             $meaningfulWords += $word
         }
     }
@@ -251,7 +263,8 @@ function Get-BranchName {
         $maxWords = if ($meaningfulWords.Count -eq 4) { 4 } else { 3 }
         $result = ($meaningfulWords | Select-Object -First $maxWords) -join '-'
         return $result
-    } else {
+    }
+    else {
         $result = ConvertTo-CleanBranchName -Name $Description
         $fallbackWords = ($result -split '-') | Where-Object { $_ } | Select-Object -First 3
         return [string]::Join('-', $fallbackWords)
@@ -270,54 +283,40 @@ if ($env:GIT_BRANCH_NAME) {
     # Check timestamp pattern first (YYYYMMDD-HHMMSS-) since it also matches the simpler ^\d+ pattern
     if ($branchName -match '^(\d{8}-\d{6})-') {
         $featureNum = $matches[1]
-    } elseif ($branchName -match '^(\d+)-') {
+    }
+    elseif ($branchName -match '^(\d+)-') {
         $featureNum = $matches[1]
-    } else {
+    }
+    else {
         $featureNum = $branchName
     }
-} else {
+}
+else {
     if ($ShortName) {
         $branchSuffix = ConvertTo-CleanBranchName -Name $ShortName
-    } else {
+    }
+    else {
         $branchSuffix = Get-BranchName -Description $featureDesc
     }
 
-    if ($Timestamp -and $Number -ne 0) {
-        Write-Warning "[specify] Warning: -Number is ignored when -Timestamp is used"
-        $Number = 0
+    if ($Timestamp -or $Number -ne 0) {
+        Write-Warning "[specify] Warning: -Number and -Timestamp are deprecated and ignored. Use -BranchType with slug-based branch names."
     }
 
-    if ($Timestamp) {
-        $featureNum = Get-Date -Format 'yyyyMMdd-HHmmss'
-        $branchName = "$featureNum-$branchSuffix"
-    } else {
-        if ($Number -eq 0) {
-            if ($DryRun -and $hasGit) {
-                $Number = Get-NextBranchNumber -SpecsDir $specsDir -SkipFetch
-            } elseif ($DryRun) {
-                $Number = (Get-HighestNumberFromSpecs -SpecsDir $specsDir) + 1
-            } elseif ($hasGit) {
-                $Number = Get-NextBranchNumber -SpecsDir $specsDir
-            } else {
-                $Number = (Get-HighestNumberFromSpecs -SpecsDir $specsDir) + 1
-            }
-        }
-
-        $featureNum = ('{0:000}' -f $Number)
-        $branchName = "$featureNum-$branchSuffix"
-    }
+    $featureNum = $BranchType
+    $branchName = "$BranchType/$branchSuffix"
 }
 
 $maxBranchLength = 244
 if ($branchName.Length -gt $maxBranchLength) {
-    $prefixLength = $featureNum.Length + 1
+    $prefixLength = $BranchType.Length + 1
     $maxSuffixLength = $maxBranchLength - $prefixLength
 
     $truncatedSuffix = $branchSuffix.Substring(0, [Math]::Min($branchSuffix.Length, $maxSuffixLength))
     $truncatedSuffix = $truncatedSuffix -replace '-$', ''
 
     $originalBranchName = $branchName
-    $branchName = "$featureNum-$truncatedSuffix"
+    $branchName = "$BranchType/$truncatedSuffix"
 
     Write-Warning "[specify] Branch name exceeded GitHub's 244-byte limit"
     Write-Warning "[specify] Original: $originalBranchName ($($originalBranchName.Length) bytes)"
@@ -333,7 +332,8 @@ if (-not $DryRun) {
             if ($LASTEXITCODE -eq 0) {
                 $branchCreated = $true
             }
-        } catch {
+        }
+        catch {
             $branchCreateError = $_.Exception.Message
         }
 
@@ -345,37 +345,45 @@ if (-not $DryRun) {
                 if ($AllowExistingBranch) {
                     if ($currentBranch -eq $branchName) {
                         # Already on the target branch
-                    } else {
+                    }
+                    else {
                         $switchBranchError = git checkout -q $branchName 2>&1 | Out-String
                         if ($LASTEXITCODE -ne 0) {
                             if ($switchBranchError) {
                                 Write-Error "Error: Branch '$branchName' exists but could not be checked out.`n$($switchBranchError.Trim())"
-                            } else {
+                            }
+                            else {
                                 Write-Error "Error: Branch '$branchName' exists but could not be checked out. Resolve any uncommitted changes or conflicts and try again."
                             }
                             exit 1
                         }
                     }
-                } elseif ($Timestamp) {
+                }
+                elseif ($Timestamp) {
                     Write-Error "Error: Branch '$branchName' already exists. Rerun to get a new timestamp or use a different -ShortName."
                     exit 1
-                } else {
+                }
+                else {
                     Write-Error "Error: Branch '$branchName' already exists. Please use a different feature name or specify a different number with -Number."
                     exit 1
                 }
-            } else {
+            }
+            else {
                 if ($branchCreateError) {
                     Write-Error "Error: Failed to create git branch '$branchName'.`n$($branchCreateError.Trim())"
-                } else {
+                }
+                else {
                     Write-Error "Error: Failed to create git branch '$branchName'. Please check your git configuration and try again."
                 }
                 exit 1
             }
         }
-    } else {
+    }
+    else {
         if ($Json) {
             [Console]::Error.WriteLine("[specify] Warning: Git repository not detected; skipped branch creation for $branchName")
-        } else {
+        }
+        else {
             Write-Warning "[specify] Warning: Git repository not detected; skipped branch creation for $branchName"
         }
     }
@@ -387,13 +395,14 @@ if ($Json) {
     $obj = [PSCustomObject]@{
         BRANCH_NAME = $branchName
         FEATURE_NUM = $featureNum
-        HAS_GIT = $hasGit
+        HAS_GIT     = $hasGit
     }
     if ($DryRun) {
         $obj | Add-Member -NotePropertyName 'DRY_RUN' -NotePropertyValue $true
     }
     $obj | ConvertTo-Json -Compress
-} else {
+}
+else {
     Write-Output "BRANCH_NAME: $branchName"
     Write-Output "FEATURE_NUM: $featureNum"
     Write-Output "HAS_GIT: $hasGit"

@@ -10,7 +10,8 @@ function Test-HasGit {
         if (-not (Get-Command git -ErrorAction SilentlyContinue)) { return $false }
         git -C $RepoRoot rev-parse --is-inside-work-tree 2>$null | Out-Null
         return ($LASTEXITCODE -eq 0)
-    } catch {
+    }
+    catch {
         return $false
     }
 }
@@ -36,15 +37,14 @@ function Test-FeatureBranch {
     }
 
     $raw = $Branch
-    $Branch = Get-SpecKitEffectiveBranchName $raw
+    $slug = Get-SpecKitEffectiveBranchName $raw
 
-    # Accept sequential prefix (3+ digits) but exclude malformed timestamps
-    # Malformed: 7-or-8 digit date + 6-digit time with no trailing slug (e.g. "2026031-143022" or "20260319-143022")
-    $hasMalformedTimestamp = ($Branch -match '^[0-9]{7}-[0-9]{6}-') -or ($Branch -match '^(?:\d{7}|\d{8})-\d{6}$')
-    $isSequential = ($Branch -match '^[0-9]{3,}-') -and (-not $hasMalformedTimestamp)
-    if (-not $isSequential -and $Branch -notmatch '^\d{8}-\d{6}-') {
+    $isConstitutionStyle = $raw -match '^(feature|fix|chore)\/[a-z0-9]+(?:-[a-z0-9]+)*$'
+    $isLegacySequential = $slug -match '^[0-9]{3,}-'
+    $isLegacyTimestamp = $slug -match '^\d{8}-\d{6}-'
+    if (-not $isConstitutionStyle -and -not $isLegacySequential -and -not $isLegacyTimestamp) {
         [Console]::Error.WriteLine("ERROR: Not on a feature branch. Current branch: $raw")
-        [Console]::Error.WriteLine("Feature branches should be named like: 001-feature-name, 1234-feature-name, or 20260319-143022-feature-name")
+        [Console]::Error.WriteLine("Feature branches should be named like: feature/your-feature, fix/your-fix, or chore/your-task")
         return $false
     }
     return $true

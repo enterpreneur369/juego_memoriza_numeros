@@ -67,6 +67,11 @@ Sync Impact Report
 4. Document any new constants, timings, and user-facing flows in the corresponding spec/task artifacts.
 5. Prefer small, reviewable commits aligned to task boundaries.
 
+## Branch naming
+- Use branch names as: `feature/<slug>` for features, `fix/<slug>` for bugfixes, `chore/<slug>` for chores.
+- Do not prefix branches with numeric IDs like `001-...`.
+- Slug must be lowercase, kebab-case, no accents.
+
 ## Governance
 - This constitution overrides local habits when there is conflict.
 - Any pull request or review must check compliance with the five core principles.
