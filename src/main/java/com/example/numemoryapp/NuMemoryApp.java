@@ -1,5 +1,9 @@
 package com.example.numemoryapp;
 
+import com.example.numemoryapp.logic.GameEngine;
+import com.example.numemoryapp.logic.GameSession;
+import com.example.numemoryapp.logic.ValidationReason;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -16,16 +20,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 
 public class NuMemoryApp extends Application {
 
     private static final long DURATION_SECONDS = 6;
-    //private ScheduledExecutorService timerThread = Executors.newSingleThreadScheduledExecutor();
+    private static final int GRID_SIZE = 9;
     private Timeline timeline;
-    private  VBox root;
+    private VBox root;
     private Pane tilePane;
-    private List<TileView> tileSequence = new ArrayList<>();
+    private final List<TileView> tileSequence = new ArrayList<>();
+    private final GameEngine gameEngine = new GameEngine();
+    private GameSession gameSession;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -35,7 +42,9 @@ public class NuMemoryApp extends Application {
 
     @Override
     public void stop() throws Exception {
-        timeline.stop();
+        if (timeline != null) {
+            timeline.stop();
+        }
     }
 
     private Parent createContent() {
@@ -50,12 +59,17 @@ public class NuMemoryApp extends Application {
     }
 
     private void startGame() {
+        tileSequence.clear();
+        gameSession = gameEngine.createSession(IntStream.rangeClosed(1, GRID_SIZE).boxed().toList());
         tilePane = populateGrid();
 
         root.getChildren().set(0, tilePane);
 
-        //timerThread.schedule(() -> {}, DURATION_SECONDS, SECONDS);
-        Timeline timeline = new Timeline(new KeyFrame(
+        if (timeline != null) {
+            timeline.stop();
+        }
+
+        timeline = new Timeline(new KeyFrame(
                 Duration.seconds(DURATION_SECONDS),
                 event -> {
                     tilePane.getChildren()
@@ -76,7 +90,7 @@ public class NuMemoryApp extends Application {
 
         List<Point2D> usedPoints = new ArrayList<>();
 
-        for (int i = 1; i <= 9; i++) {
+        for (int i = 1; i <= GRID_SIZE; i++) {
             int randomX = random.nextInt(1280 / 80) ;
             int randomY = random.nextInt(720 / 80);
 
@@ -91,17 +105,22 @@ public class NuMemoryApp extends Application {
 
             usedPoints.add(p);
 
-            var tile = new TileView(Integer.toString(i));
+            final int tileValue = i;
+            var tile = new TileView(Integer.toString(tileValue));
             tile.setTranslateX(randomX * 80);
             tile.setTranslateY(randomY * 80);
             tile.setOnMouseClicked(e -> {
-                if(tileSequence.isEmpty()) {
+                var validationResult = gameEngine.evaluateAttempt(gameSession, tileValue);
+
+                if (validationResult.reason() == ValidationReason.TERMINAL_STATE) {
                     System.out.println("Game is already Over");
                     return;
                 }
-                var correctTile = tileSequence.remove(0);
 
-                if (tile == correctTile) {
+                if (validationResult.correct()) {
+                    if (!tileSequence.isEmpty()) {
+                        tileSequence.remove(0);
+                    }
                     tile.show();
                 } else {
                     tileSequence.clear();

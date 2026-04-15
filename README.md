@@ -108,6 +108,35 @@ Componentes principales:
 
 La baseline actual cubre un unico flujo de partida manual: iniciar, memorizar numeros, ocultarlos y validar clics en orden. El tablero se reconstruye al iniciar una nueva partida y el feedback de derrota se limita a mensajes por consola.
 
+## Pruebas unitarias de logica
+
+La logica del juego se desacoplo de JavaFX en el paquete `com.example.numemoryapp.logic` para habilitar pruebas unitarias deterministas.
+
+Cobertura principal incorporada:
+
+- Reglas de acierto/error y finalizacion.
+- Inmutabilidad de estados terminales (victoria/derrota).
+- Transiciones validas e invalidas de estado de partida.
+- Casos borde: secuencia vacia, fuera de rango y duplicados.
+
+Comandos de validacion local:
+
+Windows PowerShell:
+
+```powershell
+.\mvnw.cmd -q -DskipTests compile
+.\mvnw.cmd test
+```
+
+Unix-like:
+
+```bash
+./mvnw -q -DskipTests compile
+./mvnw test
+```
+
+Para verificar repetibilidad de la suite, ejecutar `test` en corridas consecutivas y comparar resultados.
+
 ## Trabajo pendiente
 
 Las siguientes mejoras todavia no forman parte del estado actual implementado:

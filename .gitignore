@@ -36,3 +36,17 @@ build/
 
 ### Mac OS ###
 .DS_Store
+Thumbs.db
+
+### Logs and env ###
+*.log
+.env*
+
+### Java ###
+*.class
+*.jar
+.gradle/
+
+### Temp files ###
+*.tmp
+*.swp
