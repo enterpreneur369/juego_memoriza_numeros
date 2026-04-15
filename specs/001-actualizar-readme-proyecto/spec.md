@@ -5,6 +5,14 @@
 **Status**: Draft  
 **Input**: User description: "Se requiere actualizar el readme con lo realizado actualmente y con lo referente al proyecto ya que actualmente solo tiene el nombre."
 
+## Clarifications
+
+### Session 2026-04-15
+
+- Q: Como deben tratarse los criterios SC-002 y SC-004 para validacion? -> A: Mantener criterios actuales como metas aspiracionales sin validacion estricta.
+- Q: Que nivel de detalle debe cubrir el README en funcionalidades implementadas? -> A: Documentar solo funcionalidades visibles para usuario y flujo de juego.
+- Q: Que comandos deben documentarse como estandar de ejecucion? -> A: Documentar comandos usando Maven Wrapper como estandar: mvnw y mvnw.cmd.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Documentar estado actual del juego (Priority: P1)
@@ -62,8 +70,8 @@ Como equipo de desarrollo, queremos que el README deje explicito alcance actual 
 ### Functional Requirements
 
 - **FR-001**: El README MUST describir el objetivo del proyecto y el problema que resuelve.
-- **FR-002**: El README MUST detallar las funcionalidades implementadas actualmente en el juego, en lenguaje claro para personas tecnicas y no tecnicas.
-- **FR-003**: El README MUST incluir pasos de preparacion, compilacion y ejecucion para que una persona pueda correr el proyecto sin consultar otras fuentes.
+- **FR-002**: El README MUST detallar las funcionalidades implementadas actualmente que sean visibles para usuario y el flujo principal del juego, en lenguaje claro para personas tecnicas y no tecnicas.
+- **FR-003**: El README MUST incluir pasos de preparacion, compilacion y ejecucion usando Maven Wrapper (`mvnw` y `mvnw.cmd`) como estandar, para que una persona pueda correr el proyecto sin consultar otras fuentes.
 - **FR-004**: El README MUST incluir una descripcion breve de la estructura del proyecto y los componentes principales.
 - **FR-005**: El README MUST diferenciar explicitamente entre funcionalidades actuales y trabajo pendiente o mejoras futuras.
 - **FR-006**: El README MUST evitar contradicciones internas y reflejar el estado real del proyecto al momento de su actualizacion.
@@ -86,9 +94,9 @@ Como equipo de desarrollo, queremos que el README deje explicito alcance actual 
 ### Measurable Outcomes
 
 - **SC-001**: El 100% de las funcionalidades actualmente implementadas y visibles para usuario quedan descritas en el README en una seccion dedicada.
-- **SC-002**: Al menos 2 personas del equipo pueden ejecutar el proyecto siguiendo solo el README, sin pedir pasos adicionales.
+- **SC-002**: Meta aspiracional: al menos 2 personas del equipo pueden ejecutar el proyecto siguiendo solo el README, sin pedir pasos adicionales.
 - **SC-003**: Una persona nueva puede explicar objetivo, flujo principal y alcance actual del proyecto en menos de 5 minutos de lectura.
-- **SC-004**: Las dudas repetitivas sobre como ejecutar o que incluye actualmente el proyecto se reducen en al menos 50% durante la siguiente iteracion.
+- **SC-004**: Meta aspiracional: las dudas repetitivas sobre como ejecutar o que incluye actualmente el proyecto se reducen en al menos 50% durante la siguiente iteracion.
 
 ## Assumptions
 

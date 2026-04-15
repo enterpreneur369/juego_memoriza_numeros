@@ -24,22 +24,22 @@ git rev-parse --abbrev-ref HEAD
 
 The branch name must match one of these patterns:
 
-1. **Sequential**: `^[0-9]{3,}-` (e.g., `001-feature-name`, `042-fix-bug`, `1000-big-feature`)
-2. **Timestamp**: `^[0-9]{8}-[0-9]{6}-` (e.g., `20260319-143022-feature-name`)
+1. **Feature**: `^feature\/[a-z0-9]+(?:-[a-z0-9]+)*$` (e.g., `feature/update-readme`)
+2. **Fix**: `^fix\/[a-z0-9]+(?:-[a-z0-9]+)*$` (e.g., `fix/timer-reset`)
+3. **Chore**: `^chore\/[a-z0-9]+(?:-[a-z0-9]+)*$` (e.g., `chore/update-dependencies`)
 
 ## Execution
 
-If on a feature branch (matches either pattern):
+If on a feature branch (matches any pattern):
 - Output: `✓ On feature branch: <branch-name>`
 - Check if the corresponding spec directory exists under `specs/`:
-  - For sequential branches, look for `specs/<prefix>-*` where prefix matches the numeric portion
-  - For timestamp branches, look for `specs/<prefix>-*` where prefix matches the `YYYYMMDD-HHMMSS` portion
+  - For `feature/<slug>`, `fix/<slug>`, or `chore/<slug>`, look for `specs/<slug>`
 - If spec directory exists: `✓ Spec directory found: <path>`
-- If spec directory missing: `⚠ No spec directory found for prefix <prefix>`
+- If spec directory missing: `⚠ No spec directory found for slug <slug>`
 
 If NOT on a feature branch:
 - Output: `✗ Not on a feature branch. Current branch: <branch-name>`
-- Output: `Feature branches should be named like: 001-feature-name or 20260319-143022-feature-name`
+- Output: `Feature branches should be named like: feature/your-feature, fix/your-fix, or chore/your-task`
 
 ## Graceful Degradation
 

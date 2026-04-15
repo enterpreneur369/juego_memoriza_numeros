@@ -39,7 +39,8 @@ function Get-RepoRoot {
         if ($LASTEXITCODE -eq 0) {
             return $result
         }
-    } catch {
+    }
+    catch {
         # Git command failed
     }
 
@@ -62,7 +63,8 @@ function Get-CurrentBranch {
             if ($LASTEXITCODE -eq 0) {
                 return $result
             }
-        } catch {
+        }
+        catch {
             # Git command failed
         }
     }
@@ -83,7 +85,8 @@ function Get-CurrentBranch {
                     $latestTimestamp = $ts
                     $latestFeature = $_.Name
                 }
-            } elseif ($_.Name -match '^(\d{3,})-') {
+            }
+            elseif ($_.Name -match '^(\d{3,})-') {
                 $num = [long]$matches[1]
                 if ($num -gt $highest) {
                     $highest = $num
@@ -122,7 +125,8 @@ function Test-HasGit {
     try {
         $null = git -C $repoRoot rev-parse --is-inside-work-tree 2>$null
         return ($LASTEXITCODE -eq 0)
-    } catch {
+    }
+    catch {
         return $false
     }
 }
@@ -150,15 +154,15 @@ function Test-FeatureBranch {
     }
 
     $raw = $Branch
-    $Branch = Get-SpecKitEffectiveBranchName $raw
-    
-    # Accept sequential prefix (3+ digits) but exclude malformed timestamps
-    # Malformed: 7-or-8 digit date + 6-digit time with no trailing slug (e.g. "2026031-143022" or "20260319-143022")
-    $hasMalformedTimestamp = ($Branch -match '^[0-9]{7}-[0-9]{6}-') -or ($Branch -match '^(?:\d{7}|\d{8})-\d{6}$')
-    $isSequential = ($Branch -match '^[0-9]{3,}-') -and (-not $hasMalformedTimestamp)
-    if (-not $isSequential -and $Branch -notmatch '^\d{8}-\d{6}-') {
+    $slug = Get-SpecKitEffectiveBranchName $raw
+
+    $isConstitutionStyle = $raw -match '^(feature|fix|chore)\/[a-z0-9]+(?:-[a-z0-9]+)*$'
+    # Keep legacy support to avoid breaking existing in-flight branches.
+    $isLegacySequential = $slug -match '^[0-9]{3,}-'
+    $isLegacyTimestamp = $slug -match '^\d{8}-\d{6}-'
+    if (-not $isConstitutionStyle -and -not $isLegacySequential -and -not $isLegacyTimestamp) {
         [Console]::Error.WriteLine("ERROR: Not on a feature branch. Current branch: $raw")
-        [Console]::Error.WriteLine("Feature branches should be named like: 001-feature-name, 1234-feature-name, or 20260319-143022-feature-name")
+        [Console]::Error.WriteLine("Feature branches should be named like: feature/your-feature, fix/your-fix, or chore/your-task")
         return $false
     }
     return $true
@@ -176,9 +180,11 @@ function Find-FeatureDirByPrefix {
     $prefix = $null
     if ($branchName -match '^(\d{8}-\d{6})-') {
         $prefix = $Matches[1]
-    } elseif ($branchName -match '^(\d{3,})-') {
+    }
+    elseif ($branchName -match '^(\d{3,})-') {
         $prefix = $Matches[1]
-    } else {
+    }
+    else {
         return (Join-Path $specsDir $branchName)
     }
 
@@ -229,11 +235,13 @@ function Get-FeaturePathsEnv {
         if (-not [System.IO.Path]::IsPathRooted($featureDir)) {
             $featureDir = Join-Path $repoRoot $featureDir
         }
-    } elseif (Test-Path $featureJson) {
+    }
+    elseif (Test-Path $featureJson) {
         $featureJsonRaw = Get-Content -LiteralPath $featureJson -Raw
         try {
             $featureConfig = $featureJsonRaw | ConvertFrom-Json
-        } catch {
+        }
+        catch {
             [Console]::Error.WriteLine("ERROR: Failed to parse .specify/feature.json: $_")
             exit 1
         }
@@ -243,25 +251,27 @@ function Get-FeaturePathsEnv {
             if (-not [System.IO.Path]::IsPathRooted($featureDir)) {
                 $featureDir = Join-Path $repoRoot $featureDir
             }
-        } else {
+        }
+        else {
             $featureDir = Get-FeatureDirFromBranchPrefixOrExit -RepoRoot $repoRoot -CurrentBranch $currentBranch
         }
-    } else {
+    }
+    else {
         $featureDir = Get-FeatureDirFromBranchPrefixOrExit -RepoRoot $repoRoot -CurrentBranch $currentBranch
     }
     
     [PSCustomObject]@{
-        REPO_ROOT     = $repoRoot
+        REPO_ROOT      = $repoRoot
         CURRENT_BRANCH = $currentBranch
-        HAS_GIT       = $hasGit
-        FEATURE_DIR   = $featureDir
-        FEATURE_SPEC  = Join-Path $featureDir 'spec.md'
-        IMPL_PLAN     = Join-Path $featureDir 'plan.md'
-        TASKS         = Join-Path $featureDir 'tasks.md'
-        RESEARCH      = Join-Path $featureDir 'research.md'
-        DATA_MODEL    = Join-Path $featureDir 'data-model.md'
-        QUICKSTART    = Join-Path $featureDir 'quickstart.md'
-        CONTRACTS_DIR = Join-Path $featureDir 'contracts'
+        HAS_GIT        = $hasGit
+        FEATURE_DIR    = $featureDir
+        FEATURE_SPEC   = Join-Path $featureDir 'spec.md'
+        IMPL_PLAN      = Join-Path $featureDir 'plan.md'
+        TASKS          = Join-Path $featureDir 'tasks.md'
+        RESEARCH       = Join-Path $featureDir 'research.md'
+        DATA_MODEL     = Join-Path $featureDir 'data-model.md'
+        QUICKSTART     = Join-Path $featureDir 'quickstart.md'
+        CONTRACTS_DIR  = Join-Path $featureDir 'contracts'
     }
 }
 
@@ -270,7 +280,8 @@ function Test-FileExists {
     if (Test-Path -Path $Path -PathType Leaf) {
         Write-Output "  ✓ $Description"
         return $true
-    } else {
+    }
+    else {
         Write-Output "  ✗ $Description"
         return $false
     }
@@ -281,7 +292,8 @@ function Test-DirHasFiles {
     if ((Test-Path -Path $Path -PathType Container) -and (Get-ChildItem -Path $Path -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer } | Select-Object -First 1)) {
         Write-Output "  ✓ $Description"
         return $true
-    } else {
+    }
+    else {
         Write-Output "  ✗ $Description"
         return $false
     }
@@ -294,8 +306,8 @@ function Test-DirHasFiles {
 #   4. .specify/templates/ (core)
 function Resolve-Template {
     param(
-        [Parameter(Mandatory=$true)][string]$TemplateName,
-        [Parameter(Mandatory=$true)][string]$RepoRoot
+        [Parameter(Mandatory = $true)][string]$TemplateName,
+        [Parameter(Mandatory = $true)][string]$RepoRoot
     )
 
     $base = Join-Path $RepoRoot '.specify/templates'
@@ -315,10 +327,11 @@ function Resolve-Template {
                 $presets = $registryData.presets
                 if ($presets) {
                     $sortedPresets = $presets.PSObject.Properties |
-                        Sort-Object { if ($null -ne $_.Value.priority) { $_.Value.priority } else { 10 } } |
-                        ForEach-Object { $_.Name }
+                    Sort-Object { if ($null -ne $_.Value.priority) { $_.Value.priority } else { 10 } } |
+                    ForEach-Object { $_.Name }
                 }
-            } catch {
+            }
+            catch {
                 # Fallback: alphabetical directory order
                 $sortedPresets = @()
             }
@@ -329,7 +342,8 @@ function Resolve-Template {
                 $candidate = Join-Path $presetsDir "$presetId/templates/$TemplateName.md"
                 if (Test-Path $candidate) { return $candidate }
             }
-        } else {
+        }
+        else {
             # Fallback: alphabetical directory order
             foreach ($preset in Get-ChildItem -Path $presetsDir -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -notlike '.*' }) {
                 $candidate = Join-Path $preset.FullName "templates/$TemplateName.md"

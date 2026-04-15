@@ -1,13 +1,13 @@
 # Git Branching Workflow Extension
 
-Git repository initialization, feature branch creation, numbering (sequential/timestamp), validation, remote detection, and auto-commit for Spec Kit.
+Git repository initialization, feature branch creation (`feature/`, `fix/`, `chore/`), validation, remote detection, and auto-commit for Spec Kit.
 
 ## Overview
 
 This extension provides Git operations as an optional, self-contained module. It manages:
 
 - **Repository initialization** with configurable commit messages
-- **Feature branch creation** with sequential (`001-feature-name`) or timestamp (`20260319-143022-feature-name`) numbering
+- **Feature branch creation** with constitution-style prefixes (`feature/<slug>`, `fix/<slug>`, `chore/<slug>`)
 - **Branch validation** to ensure branches follow naming conventions
 - **Git remote detection** for GitHub integration (e.g., issue creation)
 - **Auto-commit** after core commands (configurable per-command with custom messages)
@@ -17,7 +17,7 @@ This extension provides Git operations as an optional, self-contained module. It
 | Command | Description |
 |---------|-------------|
 | `speckit.git.initialize` | Initialize a Git repository with a configurable commit message |
-| `speckit.git.feature` | Create a feature branch with sequential or timestamp numbering |
+| `speckit.git.feature` | Create a feature branch using `feature/`, `fix/`, or `chore/` prefixes |
 | `speckit.git.validate` | Validate current branch follows feature branch naming conventions |
 | `speckit.git.remote` | Detect Git remote URL for GitHub integration |
 | `speckit.git.commit` | Auto-commit changes (configurable per-command enable/disable and messages) |
@@ -50,7 +50,7 @@ This extension provides Git operations as an optional, self-contained module. It
 Configuration is stored in `.specify/extensions/git/git-config.yml`:
 
 ```yaml
-# Branch numbering strategy: "sequential" or "timestamp"
+# Legacy setting retained for compatibility (new flow uses branch prefixes)
 branch_numbering: sequential
 
 # Custom commit message for git init
